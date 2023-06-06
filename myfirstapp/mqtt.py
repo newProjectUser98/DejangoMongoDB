@@ -5,10 +5,11 @@ from .processmqtt_sub_data import processmqtt_sub_data
 
 def on_connect(mqtt_client, userdata, flags, rc):
     if rc == 0:
-        print('Connected successfully')
+        # print('Connected successfully')
         mqtt_client.subscribe('wc/#')
     else:
-        print('Bad connection. Code:', rc)
+        # print('Bad connection. Code:', rc)
+        pass
 
 
 def on_message(mqtt_client, userdata, msg):
