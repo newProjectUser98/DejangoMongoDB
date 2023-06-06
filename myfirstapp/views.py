@@ -1,5 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+import paho.mqtt.client as mqtt
+import json
+from django.http import JsonResponse
+from myfirstapp.mqtt import client as mqtt_client
+
 
 # Create your views here.
 def index(request):
@@ -43,6 +48,12 @@ delete_data = collection_name.delete_one({'medicine_id':'RR000123456'})
 # print(collection_name.count())
 
 
+
+
+def publish_message(request):
+    request_data = json.loads(request.body)
+    rc, mid = mqtt_client.publish(request_data['topic'], request_data['msg'])
+    return JsonResponse({'code': rc})
 
 
 
