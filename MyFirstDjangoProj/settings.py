@@ -81,18 +81,18 @@ WSGI_APPLICATION = 'MyFirstDjangoProj.wsgi.application'
 #    }
 #}
 
-DB_NAME = 'mongodb+srv://<username>:<password>@<cluster-name>.mongodb.net/myFirstDatabase'
+# DB_NAME = 'mongodb://localhost:27017/mydb'
 
-DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'employees',
-            'ENFORCE_SCHEMA': False,
-            'CLIENT': {
-                'host': 'mongodb+srv://<username>:<password>@<cluster-name>.mongodb.net/myFirstDatabase'
-            }  
-        }
-}
+# DATABASES = {
+#         'default': {
+#             'ENGINE': 'djongo',
+#             'NAME': 'employees',
+#             'ENFORCE_SCHEMA': False,
+#             'CLIENT': {
+#                 'host': 'mongodb+srv://<username>:<password>@<cluster-name>.mongodb.net/myFirstDatabase'
+#             }  
+#         }
+# }
 
 
 # Password validation

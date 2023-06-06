@@ -7,7 +7,7 @@ def index(request):
 
 import pymongo
 from django.conf import settings
-my_client = pymongo.MongoClient(settings.DB_NAME)
+my_client = pymongo.MongoClient('mongodb://localhost:27017/mydb')
 
 # First define the database name
 dbname = my_client['sample_medicines']
@@ -39,11 +39,13 @@ for r in med_details:
 	print(r["common_name"])
 
 update_data = collection_name.update_one({'medicine_id':'RR000123456'}, {'$set':{'common_name':'Paracetamol 500'}})
-
-count = collection_name.count()
-print(count)
-
 delete_data = collection_name.delete_one({'medicine_id':'RR000123456'})
+# print(collection_name.count())
+
+
+
+
+
 
 
 
