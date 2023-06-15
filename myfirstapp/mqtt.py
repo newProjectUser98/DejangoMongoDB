@@ -6,7 +6,7 @@ from .processmqtt_sub_data import processmqtt_sub_data
 def on_connect(mqtt_client, userdata, flags, rc):
     if rc == 0:
         # print('Connected successfully')
-        mqtt_client.subscribe('wc/#')
+        mqtt_client.subscribe('vikas/#')
     else:
         # print('Bad connection. Code:', rc)
         pass
