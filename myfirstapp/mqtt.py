@@ -6,7 +6,7 @@ from .processmqtt_sub_data import processmqtt_sub_data
 def on_connect(mqtt_client, userdata, flags, rc):
     if rc == 0:
         # print('Connected successfully')
-        mqtt_client.subscribe('vikas/#')
+        mqtt_client.subscribe('satish/#')
     else:
         # print('Bad connection. Code:', rc)
         pass
@@ -14,7 +14,7 @@ def on_connect(mqtt_client, userdata, flags, rc):
 
 def on_message(mqtt_client, userdata, msg):
     processmqtt_sub_data(msg)
-    print(f'Received message on topic: {msg.topic} with payload: {msg.payload}')
+    # print(f'Received message on topic: {msg.topic} with payload: {msg.payload}')
 
 
 client = mqtt.Client()
