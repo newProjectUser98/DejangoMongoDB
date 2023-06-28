@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 my_client = pymongo.MongoClient('mongodb://localhost:27017/mydb')
 from django.utils import timezone
 import pytz
+import re
 
 utc_time = timezone.now()  # Assuming you have a UTC time stored in the database
 indian_timezone = pytz.timezone('Asia/Kolkata')
@@ -39,11 +40,20 @@ def processmqtt_sub_data(msg):
     msg_type=hmqm_split[2]
     components=hmqm_split[3]
     sums=counts=avgs=0
+    messege_new = msg.payload
+    print(messege_new)
+    decoded_data = messege_new.decode('utf-8')  # Decode bytes to string
+    fixed_data = decoded_data.replace("\'", "\"")  # Replace single quotes with double quotes
+    final_mqtt_msg = json.loads(fixed_data)  # Parse string as JSON
+    print(final_mqtt_msg)
+
+   
+
     history_data = {
         "device_id": device_id,
         "message_type" : msg_type,
         "component_name" : components,
-        "msg_json" : msg.payload.decode('utf-8'),
+        "msg_json" : final_mqtt_msg,
         "created_at": formatted_datetime,
         "updated_at": formatted_datetime
     }
@@ -52,7 +62,7 @@ def processmqtt_sub_data(msg):
     try:
         print("components:",components)
         if 'cnd_tds'== components:
-            existing_dict = json.loads(msg.payload)
+            existing_dict = final_mqtt_msg
             existing_dict['device_id'] = device_id
             existing_dict['components'] = components
             existing_dict['created_at'] = formatted_datetime
@@ -60,32 +70,81 @@ def processmqtt_sub_data(msg):
             cnd_sen_data.insert_one(existing_dict)
 
             criteria = {"created_at": {"$gte": lowerTime,"$lte": upperTime }}
-            criteria_cnd = {"created_at": {"$gte": lowerTime,"$lte": upperTime },
-                            'cnd': { '$exists': True }}
-            cnd_sen_hour_data = cnd_sen_data.find(criteria)
+
+            cnd_sen_data_for_hour = cnd_sen_data.find(criteria)
             count = cnd_sen_data.count_documents(criteria)
-            print("count ",count)
 
-            criteria_new = {"$match": criteria_cnd}
-            pipelines = [
-                criteria_new,
-                {"$group": {"_id": None, "total": {"$sum": "$value"}, "average": {"$avg": "$value"}, "count": {"$sum": 1}}}
-            ]
+            print(count)
+            cnd_hour_sum = 0
+            asp_hour_sum = 0
+            tsp_hour_sum = 0
+            spn_hour_sum = 0
+            for all_data in cnd_sen_data_for_hour:
+                for k,v in all_data.items():
+                    print(k,v)
+                    if k == 'cnd':
+                        cnd_hour_sum = cnd_hour_sum + int(v)
+                    if k == 'asp':
+                        asp_hour_sum = asp_hour_sum + int(v)
+                    if k == 'tsp':
+                        tsp_hour_sum = tsp_hour_sum + int(v)
+                    if k == 'spn':
+                        spn_hour_sum = spn_hour_sum + int(v)
 
-            result = list(cnd_sen_data.aggregate(pipelines))
+            cnd_hour_avg=cnd_hour_sum/count
+            asp_hour_avg=asp_hour_sum/count
+            tsp_hour_avg=tsp_hour_sum/count
+            spn_hour_avg=spn_hour_sum/count
 
-            # Print the aggregation result
-            if len(result) > 0:
-                print("Sum:", result[0]["total"])
-                print("Average:", result[0]["average"])
-                print("Count:", result[0]["count"])
-            else:
-                print("No documents found in the last hour.")
-                
-            # {"sum": 0, "avg": 0.0, "count": 1}
+            
 
-            # for cnd_data in cnd_sen_hour_data:
-            #     print(cnd_data)
+            collection_names = dbname.list_collection_names()
+            if cnd_sen_hourly in collection_names:
+                cnd_sen_hourly_data = cnd_sen_hourly.find(criteria)
+                if cnd_sen_hourly_data:
+                    for all_data in cnd_sen_hourly_data:
+                        print(all_data)
+                    print("in if")
+
+                    cnd_hour_data = {
+                        "device_id": device_id,
+                        "message_type" : msg_type,
+                        "component_name" : components,
+                        "cnd":{"sum": cnd_hour_sum, "avg":cnd_hour_avg,'count':count},
+                        "asp":{"sum": asp_hour_sum, "avg":asp_hour_avg,'count':count},
+                        "tsp":{"sum": tsp_hour_sum, "avg":tsp_hour_avg,'count':count},
+                        "spn":{"sum": spn_hour_sum, "avg":spn_hour_avg,'count':count},
+                        "created_at": formatted_datetime,
+                        "updated_at": formatted_datetime
+                    }
+                    cnd_sen_hourly.insert_one(cnd_hour_data)
+
+                else:
+                print("in else")
+                cnd_hour_data = {
+                    "device_id": device_id,
+                    "message_type" : msg_type,
+                    "component_name" : components,
+                    "cnd":{"sum": cnd_hour_sum, "avg":cnd_hour_avg,'count':count},
+                    "asp":{"sum": asp_hour_sum, "avg":asp_hour_avg,'count':count},
+                    "tsp":{"sum": tsp_hour_sum, "avg":tsp_hour_avg,'count':count},
+                    "spn":{"sum": spn_hour_sum, "avg":spn_hour_avg,'count':count},
+                    "created_at": formatted_datetime,
+                    "updated_at": formatted_datetime
+                }
+                cnd_sen_hourly.insert_one(cnd_hour_data)
+
+        #         # Print the aggregation result
+        #         if len(result) > 0:
+        #             print("Sum:", result[0]["total"])
+        #             print("Average:", result[0]["average"])
+        #             print("Count:", result[0]["count"])
+        #         else:
+        #             print("No documents found in the last hour.")
+                    
+        #         # # {"sum": 0, "avg": 0.0, "count": 1}
+        
+            
             
 
     except Exception as e:
